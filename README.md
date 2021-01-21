@@ -10,7 +10,7 @@ Kun lähetyksessä raidat muuttuu, käynnistetään transkoodaava ffmpeg uudelle
 Aivan alkutekijöissään vielä :D
 
 
-TODO:  dvbsub -> tesseract -> webvtt
+TODO:  ks bin/soittaja.py !TODO  
 
 
 
