@@ -1,6 +1,6 @@
 # enigma2transkoodaaja
 
-![](https://raw.githubusercontent.com/janttari/e2transkoodaaja/main/DOC/kaavio.png)  
+![](https://raw.githubusercontent.com/janttari/enigma2transkoodaaja/main/DOC/kaavio.png)  
 
 Transkoodaa enigma2-boksilta striimin selaimelle HLS-muotoon mäpäten mukaan kaikki ääniraidat.  
 Kun lähetyksessä raidat muuttuu, käynnistetään transkoodaava ffmpeg uudelleen ja jatketaan.  
