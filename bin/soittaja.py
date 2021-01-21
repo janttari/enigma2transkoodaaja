@@ -19,7 +19,7 @@ import time
 import copy
 import subprocess
 
-FFCOMMAND="ffmpeg -re -i - %MAP -f hls -var_stream_map \"%VARSTREAMMAP\" -flags +cgop -g 25 -r 25 -c:v libx264 -b:v 8000k -c:a aac -b:a 96k -hls_flags delete_segments+append_list+omit_endlist -hls_time 1 -hls_list_size 10 -hls_segment_filename /dev/shm/hls/file_%v_%07d.ts /dev/shm/hls/out_%v.m3u8"
+FFCOMMAND="ffmpeg -loglevel quiet -re -i - %MAP -f hls -var_stream_map \"%VARSTREAMMAP\" -flags +cgop -g 25 -r 25 -c:v libx264 -b:v 8000k -c:a aac -b:a 96k -hls_flags delete_segments+append_list+omit_endlist -hls_time 1 -hls_list_size 10 -hls_segment_filename /dev/shm/hls/file_%v_%07d.ts /dev/shm/hls/out_%v.m3u8"
 class Ffstriimaaja:
     def __init__(self):
         self.PATTABLE = {}
@@ -93,6 +93,9 @@ class Ffstriimaaja:
                 if self.th_ffkirjoittaja is not None: #ffkirjoittaja on olemassa joten tapetaan se ensin
                     print("Tapetan vanha")
                     self.ffaja=False
+                    self.PATTABLE = {}
+                    self.CURTRACKS = {}
+                    self.LASTSEEN = {}
                     time.sleep(1)
                     self.th_ffkirjoittaja.join()
                 self.th_ffkirjoittaja=threading.Thread(target=self.ffkirjoittaja)
