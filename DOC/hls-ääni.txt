@@ -1,0 +1,17 @@
+0. Python lukee e2 streamia ja raitojen muuttuessa käynnistää ffmpeg-prosessin uusiksi. hls append list yms siihen
+
+1. tee HLS-sälää:
+ffmpeg -re -i b.ts -flags +cgop -g 25 -r 25 -c:v libx264 -b:v 1000k -c:a aac -b:a 96k -map 0:v -map 0:a:0 -map 0:a:1 -f hls -var_stream_map "v:0 a:0 a:1" -hls_time 1 -hls_list_size 0 -hls_segment_filename '/dev/shm/hls/file_%v_%07d.ts' /dev/shm/hls/out_%v.m3u8
+
+2. manuaalisesti master.m3u8:
+
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aac",LANGUAGE="fin",NAME="Finnish",DEFAULT=YES,AUTOSELECT=YES,URI="out_1.m3u8"
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aac",LANGUAGE="swe",NAME="Swedish",DEFAULT=NO,AUTOSELECT=YES,URI="out_2.m3u8"
+#EXT-X-STREAM-INF:BANDWIDTH=2962000,NAME="Main",CODECS="avc1.66.30",RESOLUTION=1280x720,AUDIO="aac"
+out_0.m3u8
+
+
+
+3. /www/soitin2
