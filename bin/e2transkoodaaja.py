@@ -1,4 +1,18 @@
 #!/usr/bin/env python3
+#
+# Lukee ts:ää enigma2:lta ja lähettää selaimelle HLS:nä. jos lähetyksen ääniraidat muuttuu, ffmpeg käynnistetään uudelleen
+# uusilla raita-mäppäyksillä
+#
+# !TODO 
+# -ffmpeg deinterlace
+# -ffmpeg quiet
+# -ts tunnista raitojen kielikoodi
+# -varmista uudelleenkäynnistys striimin muuttuessa
+# -valvo ettei ffmpeg jää jumiin
+# -selaimen soittimen reboot (stuck kun framet ei lisäänny)
+# -DVBSUB -> tesseract -> WEBVTT
+#    
+
 
 import threading
 import time
