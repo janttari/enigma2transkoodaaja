@@ -33,7 +33,7 @@ TODO:  ks bin/e2transkoodaaja.py !TODO
 
 
 [NGINX](https://www.nginx.com/):lle seuraava asetus:
-´´´
+```
         location /hls {
             root /dev/shm;
             add_header Cache-Control no-cache;
@@ -41,7 +41,7 @@ TODO:  ks bin/e2transkoodaaja.py !TODO
             # create_full_put_path  on;
             # dav_access all:rw;
         }
-´´´
+```
 
 
 
