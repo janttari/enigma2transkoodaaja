@@ -5,8 +5,7 @@
 #
 # !TODO 
 # -ffmpeg deinterlace
-# -ffmpeg quiet
-# -ts tunnista raitojen kielikoodi
+# -ts tunnista raitojen kielikoodi (osin ok)
 # -varmista uudelleenkäynnistys striimin muuttuessa
 # -valvo ettei ffmpeg jää jumiin
 # -selaimen soittimen reboot (stuck kun framet ei lisäänny)
