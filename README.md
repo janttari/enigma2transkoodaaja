@@ -11,7 +11,17 @@
   www-palvelimeksi suositeltava on [NGINX](https://www.nginx.com/).
 
 
-    
+---
+### PERUSKÄYTTÖ:
+```
+./e2transkoodaaja.py ch1 create #luo kanavan nimeltä ch1  
+./e2transkoodaaja.py ch1 e2play http://192.168.1.12:8001/1:0:1:51:1001:20F6:EEEE0000:0:0:0: #lähettää striimauspyynnön
+./e2transkoodaaja.py ch1 delete #lopettaa kanavan
+```
+
+
+
+-----
 
 
 
