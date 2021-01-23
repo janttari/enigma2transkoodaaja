@@ -30,7 +30,8 @@ ja aletaan Ffmpegillä striimaamaan ne HLS-muotoon.
 
 
 
-TODO:  ks bin/e2transkoodaaja.py !TODO  
+TODO:  ks [bin/e2transkoodaaja.py](bin/e2transkoodaaja.py)  
+
 
 
 NGINX:lle seuraava asetus:
