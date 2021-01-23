@@ -1,6 +1,6 @@
 # e2transkoodaaja 
   
-  ###e2transkoodaaja.py  
+  ### e2transkoodaaja.py  
   Lukee striimiä enigma2-boksilta mäpäten siitä video- ja audioraidat  
   ja muuntaa sen ffmpegillä [HLS](https://en.wikipedia.org/wiki/HTTP_Live_Streaming)-muotoon  
   striimattavaksi.  
