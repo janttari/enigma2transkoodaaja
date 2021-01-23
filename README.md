@@ -8,6 +8,7 @@
   www-hakemistossa on yksinkertainen [hls.js](https://github.com/video-dev/hls.js/)-pohjainen  
   soitin toistoa varten. Myös esimerkiksi [VLC](https://www.videolan.org/vlc/) osaa  
   toistaa tätä.  
+  www-palvelimeksi suositeltava on [NGINX](https://www.nginx.com/).
 
 
     
@@ -32,7 +33,7 @@ ja aletaan Ffmpegillä striimaamaan ne HLS-muotoon.
 TODO:  ks bin/e2transkoodaaja.py !TODO  
 
 
-[NGINX](https://www.nginx.com/):lle seuraava asetus:
+NGINX:lle seuraava asetus:
 ```
         location /hls {
             root /dev/shm;
