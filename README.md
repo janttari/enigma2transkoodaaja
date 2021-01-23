@@ -26,10 +26,10 @@ Idea on tunnistaa enigma2:n striimistä PAT-paketti ja sen perusteella PMT-paket
 Kun PMT-paketti löytyy (tai muuttuu), valitaan siitä edelleen striimattavat raidat  
 ja aletaan Ffmpegillä striimaamaan ne HLS-muotoon.  
   
-  
 
 
-TODO:  ks bin/soittaja.py !TODO  
+
+TODO:  ks bin/e2transkoodaaja.py !TODO  
 
 
 
