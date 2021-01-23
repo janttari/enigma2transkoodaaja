@@ -32,6 +32,17 @@ ja aletaan Ffmpegillä striimaamaan ne HLS-muotoon.
 TODO:  ks bin/e2transkoodaaja.py !TODO  
 
 
+[NGINX](https://www.nginx.com/):lle seuraava asetus:
+´´´
+        location /hls {
+            root /dev/shm;
+            add_header Cache-Control no-cache;
+            # dav_methods PUT DELETE MKCOL;
+            # create_full_put_path  on;
+            # dav_access all:rw;
+        }
+´´´
+
 
 
 
