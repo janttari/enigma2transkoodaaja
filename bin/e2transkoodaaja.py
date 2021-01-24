@@ -37,6 +37,45 @@ os.makedirs(PROJTMP, exist_ok=True)
 
 FFCOMMAND = "ffmpeg -loglevel quiet -re -i - %MAP -f hls -var_stream_map \"%VARSTREAMMAP\" -flags +cgop -g 25 -r 25 -c:v libx264 -b:v 8000k -c:a aac -b:a 96k -hls_flags delete_segments+append_list+omit_endlist -hls_time 1 -hls_list_size 10 -hls_segment_filename %CHANPATHfile_%v_%07d.ts %CHANPATHout_%v.m3u8"
 
+STREAMTYPES={
+0x0 :("Reserved", "-"),
+0x1 :("MPEG-1 Video", "v"),
+0x2 :("MPEG-2 Video", "v"),
+0x3 :("MPEG-1 Audio", "a"),
+0x4 :("MPEG-2 Audio", "a"),
+0x5 :("ISO 13818-1 private sections", "-"),
+0x6 :("Teletext or Subtitle", "s"), #0x6 :("ISO 13818-1 PES private data", "-"),
+0x7 :("ISO 13522 MHEG", "-"),
+0x8 :("ISO 13818-1 DSM-CC", "-"),
+0x9 :("ISO 13818-1 auxiliary", "-"),
+0xa :("ISO 13818-6 multi-protocol encap", "-"),
+0xb :("ISO 13818-6 DSM-CC U-N msgs", "-"),
+0xc :("ISO 13818-6 stream descriptors", "-"),
+0xd :("ISO 13818-6 sections", "-"),
+0xe :("ISO 13818-1 auxiliary", "-"),
+0xf :("MPEG-2 AAC Audio", "a"),
+0x10 :("MPEG-4 Video", "v"),
+0x11 :("MPEG-4 LATM AAC Audio", "a"),
+0x12 :("MPEG-4 generic", "-"),
+0x13 :("ISO 14496-1 SL-packetized", "-"),
+0x14 :("ISO 13818-6 Synchronized Download Protocol", "-"),
+0x1b :("H.264 Video", "v"),
+0x80 :("DigiCipher II Video", "v"),
+0x81 :("A52/AC-3 Audio", "a"),
+0x82 :("HDMV DTS Audio", "a"),
+0x83 :("LPCM Audio", "a"),
+0x84 :("SDDS Audio", "a"),
+0x85 :("ATSC Program ID", "-"),
+0x86 :("Hybridi", "-"), #0x86 :("DTS-HD Audio", "a"),
+0x87 :("E-AC-3 Audio", "a"),
+0x8a :("DTS Audio", "a"),
+0x91 :("A52b/AC-3 Audio", "a"),
+0x92 :("DVD_SPU vls Subtitle", "s"),
+0x94 :("SDDS Audio", "a"),
+0xa0 :("MSCODEC Video", "v"),
+0xea :("Private ES (VC-1)", "-")
+}
+
 
 def usage():
     print("käyttö:")
@@ -194,7 +233,7 @@ class Fork:
                         self.PID = int.from_bytes(
                             self.spacket[1:3], byteorder='big') & 0b0001111111111111
                         self.Adaption = ((self.spacket[3]) & 0b00110000) >> 4
-                        if self.PUSI != 0:
+                        if self.PUSI != 0 and self.PID in self.PATTABLE:
                             self.parsePMT()
                         if self.PID == 0:
                             self.parsePAT()
@@ -247,48 +286,59 @@ class Fork:
         last_section_number = self.spacket[start+7]
         proginfo = self.spacket[start+14:start+14+program_info_length]
 
-        if self.PID in self.PATTABLE:  # Tämä on PMT-paketti!
-            #print("***",self.PID)
-            tracks_start_point = program_info_length+17
-            pointer = tracks_start_point
-            nytTracks = {}
-            while pointer < section_length+program_info_length-17:
-                # ISO/IEC 13818-1 : 2000 (E): Table 2-29 – Stream type assignments 2VIDEO 3AUDIO
-                streamType = self.spacket[pointer]
-                elementary_PID = int.from_bytes(
-                    self.spacket[pointer+1:pointer+3], byteorder='big') & 0b0001111111111111
-                ES_info_length = int.from_bytes(
-                    self.spacket[pointer+3:pointer+5], byteorder='big') & 0b0000111111111111
-                lng="und"
-                if streamType==3 or streamType== 0x11:
-                    for i in range(pointer,pointer+ES_info_length):
-                        if self.spacket[i] == 10 and self.spacket[i+1]==4:
-                            try:
-                                lng=self.spacket[i+2:i+5].decode()
-                            except:
-                                pass
-                if streamType==6:
-                    for i in range(pointer,pointer+ES_info_length):
-                        if self.spacket[i]==89 or self.spacket[i]==86: # and spacket[i+1]==4:
-                            try:
-                                lng=self.spacket[i+2:i+5].decode()
-                            except:
-                                pass
-                #print("TYPE", hex(streamType), hex(elementary_PID),lng)
-                #ISO/IEC 13818-1 : 2000 Table 2-39 – Program and program element descriptors
-                if streamType == 2 or streamType== 27 or streamType == 3 or streamType== 0x11:  # video tai audio
-                    nytTracks[elementary_PID] = [streamType,lng]
-                    #!TODO tässä käy läpi ES_info_length:n määrä loopilla!! pitäisi mm kielikoodi löytyä!
-                pointer += ES_info_length+5
-            
-            if  nytTracks != self.CURTRACKS:  # raidat muuttuneet!
-                time.sleep(2)
-                if self.ffaja and len(self.CURTRACKS)>0:  # ffkirjoittaja on olemassa joten tapetaan se ensin
-                    self.ffaja = False
-                    self.PATTABLE = {}
-                    self.CURTRACKS = {}
-                    self.LASTSEEN = {}
-                self.CURTRACKS = copy.deepcopy(nytTracks)
+        tracks_start_point = program_info_length+17
+        pointer = tracks_start_point
+        nytTracks = {}
+        while pointer < section_length+program_info_length-17: #TODO fix
+            # ISO/IEC 13818-1 : 2000 (E): Table 2-29 – Stream type assignments 2VIDEO 3AUDIO
+            streamType = self.spacket[pointer]
+            elementary_PID = int.from_bytes(
+                self.spacket[pointer+1:pointer+3], byteorder='big') & 0b0001111111111111
+            ES_info_length = int.from_bytes(
+                self.spacket[pointer+3:pointer+5], byteorder='big') & 0b0000111111111111
+            lng="und"
+            if streamType==3 or streamType== 0x11:
+                for i in range(pointer,pointer+ES_info_length):
+                    if self.spacket[i] == 10 and self.spacket[i+1]==4:
+                        try:
+                            lng=self.spacket[i+2:i+5].decode()
+                        except:
+                            pass
+            if streamType==6:
+                try: #poikkeus jos onkin audio.. vittu mitä paskaa
+                    if self.spacket[i]==0xE0 and self.spacket[i+1] == 0x44 and self.spacket[i+2] == 0x06:
+                        streamType=0x87 
+                        break
+                except:
+                    pass
+
+                for i in range(pointer,pointer+ES_info_length):
+                    if self.spacket[i]==89 or self.spacket[i]==86: # and spacket[i+1]==4:
+                        lng=self.spacket[i+2:i+5].decode()
+                        subtype=self.spacket[i+5]
+                        if subtype>=0x10 and subtype <= 0x14:
+                            ssubtype="normal"
+                        elif subtype>=0x20 and subtype <= 0x24:
+                            ssubtype="hard of hearing"
+                        if self.spacket[i]==86:
+                            ssubtype="teletext" #teletext
+
+            #print("TYPE", hex(streamType), hex(elementary_PID),lng)
+            #ISO/IEC 13818-1 : 2000 Table 2-39 – Program and program element descriptors
+            #if streamType == 2 or streamType== 27 or streamType == 3 or streamType== 0x11:  # video tai audio
+            if STREAMTYPES[streamType][1]=="a" or STREAMTYPES[streamType][1]=="v":
+                nytTracks[elementary_PID] = [streamType,lng]
+                #!TODO tässä käy läpi ES_info_length:n määrä loopilla!! pitäisi mm kielikoodi löytyä!
+            pointer += ES_info_length+5 #!TODO fix
+        
+        if  nytTracks != self.CURTRACKS:  # raidat muuttuneet!
+            time.sleep(2)
+            if self.ffaja and len(self.CURTRACKS)>0:  # ffkirjoittaja on olemassa joten tapetaan se ensin
+                self.ffaja = False
+                self.PATTABLE = {}
+                self.CURTRACKS = {}
+                self.LASTSEEN = {}
+            self.CURTRACKS = copy.deepcopy(nytTracks)
 
 if __name__ == "__main__":
     #print(len(sys.argv))
