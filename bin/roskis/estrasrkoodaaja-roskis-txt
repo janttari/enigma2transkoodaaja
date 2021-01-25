@@ -66,7 +66,7 @@ STREAMTYPES={
 0x83 :("LPCM Audio", "a"),
 0x84 :("SDDS Audio", "a"),
 0x85 :("ATSC Program ID", "-"),
-0x86 :("DTS-HD Audio", "p"), #hybridi
+0x86 :("Hybridi", "-"), #0x86 :("DTS-HD Audio", "a"),
 0x87 :("E-AC-3 Audio", "a"),
 0x8a :("DTS Audio", "a"),
 0x91 :("A52b/AC-3 Audio", "a"),
@@ -101,7 +101,9 @@ class Fork:
         self.ffaja = True
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.th_e2lukija=None
+        #print(PROJTMP+channame+".sock")
         if os.path.exists(PROJTMP+channame+".sock"):  # tämän niminen kanava on jo!
+            #print("KAnaVA on jo")
             self.sock.connect(PROJTMP+channame+".sock")
             self.sock.settimeout(1)  # lähetä komento kanavalle
             komento = json.dumps({"command": command, "uri": uri}).encode()
@@ -114,6 +116,7 @@ class Fork:
                 try:
                     pid = os.fork()
                     if pid > 0:
+                        #print("PID", pid)
                         with open(PROJTMP+channame+".pid", "w") as f:
                             f.write(str(pid))
                         os._exit(0)
@@ -130,9 +133,11 @@ class Fork:
         self.th_ffkirjoittaja.start()
 
     def receiveSock(self):
+        #print("receiver")
         self.sock.bind(PROJTMP+channame+".sock")
         self.sock.listen(1)
         while True:
+            #print("lukee")
             connection, client_address = self.sock.accept()
             while True:
                 data = connection.recv(100)
@@ -147,6 +152,7 @@ class Fork:
                             os.kill(pid, signal.SIGTERM) #or signal.SIGKILL 
 
                     elif jdata["command"] == "e2play":
+                        #self.ffaja = False
                         self.e2lukijarun = False
                         self.e2uri = jdata["uri"]
                         if self.th_e2lukija is not None:
@@ -166,6 +172,7 @@ class Fork:
             atrcount = 0
             for i in self.CURTRACKS:
                 mappays += " -map i:"+str(i)
+                print("MAP", self.CURTRACKS[i][0])
                 if self.CURTRACKS[i][0] != 2 and self.CURTRACKS[i][0] != 27:  # audiot..
                     varstreammap += " a:"+str(atrcount)
                     lang = self.CURTRACKS[i][1]
@@ -262,8 +269,6 @@ class Fork:
             pointer += 4
 
     def parsePMT(self):
-        if PID == 0:  # onkin PAT
-            return
         start = 4
         stream_id = self.spacket[start]
         tableid = self.spacket[start]
@@ -285,6 +290,7 @@ class Fork:
         pointer = tracks_start_point
         nytTracks = {}
 
+        print("---------------------------", self.PID)
         while pointer < section_length+program_info_length-17:
             # ISO/IEC 13818-1 : 2000 (E): Table 2-29 – Stream type assignments 2VIDEO 3AUDIO
             streamType = self.spacket[pointer]
@@ -295,7 +301,12 @@ class Fork:
             olng = "und"
             otype ="?"
             oinfo ="?"
+
             extdata = self.spacket[pointer+5:pointer+ES_info_length+5]
+            print(extdata)
+            for e in extdata: 
+                print(hex(e),end=",")
+            print()
             if STREAMTYPES[streamType][1]=="a":
                 otype="audio"
             if STREAMTYPES[streamType][1]=="v":
@@ -318,6 +329,44 @@ class Fork:
                 if (extdata[i]==0x56 or extdata[i]==0x59) and extdata [i+5]<12: #subt lang
                     olng=extdata[i+2:i+5].decode()
 
+            # while pointer < section_length+program_info_length-17: #TODO fix
+            #     # ISO/IEC 13818-1 : 2000 (E): Table 2-29 – Stream type assignments 2VIDEO 3AUDIO
+            #     streamType = self.spacket[pointer]
+            #     elementary_PID = int.from_bytes(
+            #         self.spacket[pointer+1:pointer+3], byteorder='big') & 0b0001111111111111
+            #     ES_info_length = int.from_bytes(
+            #         self.spacket[pointer+3:pointer+5], byteorder='big') & 0b0000111111111111
+            #     lng="und"
+            #     if streamType==3 or streamType== 0x11:
+            #         for i in range(pointer,pointer+ES_info_length):
+            #             if self.spacket[i] == 10 and self.spacket[i+1]==4:
+            #                 try:
+            #                     lng=self.spacket[i+2:i+5].decode()
+            #                 except:
+            #                     pass
+            #     if streamType==6:
+            #         try: #poikkeus jos onkin audio.. vittu mitä paskaa
+            #             if self.spacket[i]==0xE0 and self.spacket[i+1] == 0x44 and self.spacket[i+2] == 0x06:
+            #                 streamType=0x87 
+            #                 break
+            #         except:
+            #             pass
+
+            #         for i in range(pointer,pointer+ES_info_length):
+            #             if self.spacket[i]==89 or self.spacket[i]==86: # and spacket[i+1]==4:
+            #                 lng=self.spacket[i+2:i+5].decode()
+            #                 subtype=self.spacket[i+5]
+            #                 if subtype>=0x10 and subtype <= 0x14:
+            #                     ssubtype="normal"
+            #                 elif subtype>=0x20 and subtype <= 0x24:
+            #                     ssubtype="hard of hearing"
+            #                 if self.spacket[i]==86:
+            #                     ssubtype="teletext" #teletext
+
+            print("TYPE", hex(streamType), hex(elementary_PID), olng, otype)
+            #print("TYPE", hex(streamType), hex(elementary_PID),lng)
+            #ISO/IEC 13818-1 : 2000 Table 2-39 – Program and program element descriptors
+            #if streamType == 2 or streamType== 27 or streamType == 3 or streamType== 0x11:  # video tai audio
             if STREAMTYPES[streamType][1]=="a" or STREAMTYPES[streamType][1]=="v":
                 nytTracks[elementary_PID] = [streamType,olng]
                 #!TODO tässä käy läpi ES_info_length:n määrä loopilla!! pitäisi mm kielikoodi löytyä!
