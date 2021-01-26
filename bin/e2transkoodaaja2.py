@@ -3,15 +3,14 @@
 # Lukee ts:ää enigma2:lta ja lähettää selaimelle HLS:nä. jos lähetyksen ääniraidat muuttuu, ffmpeg käynnistetään uudelleen
 # uusilla raita-mäppäyksillä
 #
-# !TODO 
+# !TODO
 # -ffmpeg deinterlace
 # -ts tunnista raitojen kielikoodi (osin ok)
 # -varmista uudelleenkäynnistys striimin muuttuessa
 # -valvo ettei ffmpeg jää jumiin
 # -selaimen soittimen reboot (stuck kun framet ei lisäänny)
 # -DVBSUB -> tesseract -> WEBVTT
-#    
-
+#
 
 import threading
 import time
@@ -37,43 +36,43 @@ os.makedirs(PROJTMP, exist_ok=True)
 
 FFCOMMAND = "ffmpeg -loglevel quiet -re -i - %MAP -f hls -var_stream_map \"%VARSTREAMMAP\" -flags +cgop -g 25 -r 25 -c:v libx264 -b:v 8000k -c:a aac -b:a 96k -hls_flags delete_segments+append_list+omit_endlist -hls_time 1 -hls_list_size 10 -hls_segment_filename %CHANPATHfile_%v_%07d.ts %CHANPATHout_%v.m3u8"
 
-STREAMTYPES={
-0x0 :("Reserved", "-"),
-0x1 :("MPEG-1 Video", "v"),
-0x2 :("MPEG-2 Video", "v"),
-0x3 :("MPEG-1 Audio", "a"),
-0x4 :("MPEG-2 Audio", "a"),
-0x5 :("ISO 13818-1 private sections", "-"),
-0x6 :("Teletext or Subtitle", "s"), #0x6 :("ISO 13818-1 PES private data", "-"),
-0x7 :("ISO 13522 MHEG", "-"),
-0x8 :("ISO 13818-1 DSM-CC", "-"),
-0x9 :("ISO 13818-1 auxiliary", "-"),
-0xa :("ISO 13818-6 multi-protocol encap", "-"),
-0xb :("ISO 13818-6 DSM-CC U-N msgs", "-"),
-0xc :("ISO 13818-6 stream descriptors", "-"),
-0xd :("ISO 13818-6 sections", "-"),
-0xe :("ISO 13818-1 auxiliary", "-"),
-0xf :("MPEG-2 AAC Audio", "a"),
-0x10 :("MPEG-4 Video", "v"),
-0x11 :("MPEG-4 LATM AAC Audio", "a"),
-0x12 :("MPEG-4 generic", "-"),
-0x13 :("ISO 14496-1 SL-packetized", "-"),
-0x14 :("ISO 13818-6 Synchronized Download Protocol", "-"),
-0x1b :("H.264 Video", "v"),
-0x80 :("DigiCipher II Video", "v"),
-0x81 :("A52/AC-3 Audio", "a"),
-0x82 :("HDMV DTS Audio", "a"),
-0x83 :("LPCM Audio", "a"),
-0x84 :("SDDS Audio", "a"),
-0x85 :("ATSC Program ID", "-"),
-0x86 :("DTS-HD Audio", "p"), #hybridi
-0x87 :("E-AC-3 Audio", "a"),
-0x8a :("DTS Audio", "a"),
-0x91 :("A52b/AC-3 Audio", "a"),
-0x92 :("DVD_SPU vls Subtitle", "s"),
-0x94 :("SDDS Audio", "a"),
-0xa0 :("MSCODEC Video", "v"),
-0xea :("Private ES (VC-1)", "-")
+STREAMTYPES = {
+    0x0: "Reserved",
+    0x1: "MPEG-1 Video",
+    0x2: "MPEG-2 Video",
+    0x3: "MPEG-1 Audio",
+    0x4: "MPEG-2 Audio",
+    0x5: "ISO 13818-1 private sections",
+    0x6: "ISO 13818-1 PES private data",
+    0x7: "ISO 13522 MHEG",
+    0x8: "ISO 13818-1 DSM-CC",
+    0x9: "ISO 13818-1 auxiliary",
+    0xa: "ISO 13818-6 multi-protocol encap",
+    0xb: "ISO 13818-6 DSM-CC U-N msgs",
+    0xc: "ISO 13818-6 stream descriptors",
+    0xd: "ISO 13818-6 sections",
+    0xe: "ISO 13818-1 auxiliary",
+    0xf: "MPEG-2 AAC Audio",
+    0x10: "MPEG-4 Video",
+    0x11: "MPEG-4 LATM AAC Audio",
+    0x12: "MPEG-4 generic",
+    0x13: "ISO 14496-1 SL-packetized",
+    0x14: "ISO 13818-6 Synchronized Download Protocol",
+    0x1b: "H.264 Video",
+    0x80: "DigiCipher II Video",
+    0x81: "A52/AC-3 Audio",
+    0x82: "HDMV DTS Audio",
+    0x83: "LPCM Audio",
+    0x84: "SDDS Audio",
+    0x85: "ATSC Program ID",
+    0x86: "DTS-HD Audio",  # hybridi
+    0x87: "E-AC-3 Audio",
+    0x8a: "DTS Audio",
+    0x91: "A52b/AC-3 Audio",
+    0x92: "DVD_SPU vls Subtitle",
+    0x94: "SDDS Audio",
+    0xa0: "MSCODEC Video",
+    0xea: "Private ES (VC-1)"
 }
 
 
@@ -100,7 +99,7 @@ class Fork:
         self.prosff = None
         self.ffaja = True
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.th_e2lukija=None
+        self.th_e2lukija = None
         if os.path.exists(PROJTMP+channame+".sock"):  # tämän niminen kanava on jo!
             self.sock.connect(PROJTMP+channame+".sock")
             self.sock.settimeout(1)  # lähetä komento kanavalle
@@ -110,7 +109,8 @@ class Fork:
         else:  # luo kanava
             if command == "create":
                 os.makedirs(HLSPATH+channame, exist_ok=True)
-                print("Striimi löytyy osoitteesta: http://localhost"+HLSPATH+channame+"/master.m3u8")
+                print("Striimi löytyy osoitteesta: http://localhost" +
+                      HLSPATH+channame+"/master.m3u8")
                 try:
                     pid = os.fork()
                     if pid > 0:
@@ -140,18 +140,19 @@ class Fork:
                     jdata = json.loads(data)
                     if jdata["command"] == "delete":
                         with open(PROJTMP+channame+".pid") as f:
-                            pid=int(f.read())
+                            pid = int(f.read())
                             shutil.rmtree(HLSPATH+channame)
                             os.remove(PROJTMP+channame+".pid")
                             os.remove(PROJTMP+channame+".sock")
-                            os.kill(pid, signal.SIGTERM) #or signal.SIGKILL 
+                            os.kill(pid, signal.SIGTERM)  # or signal.SIGKILL
 
                     elif jdata["command"] == "e2play":
                         self.e2lukijarun = False
                         self.e2uri = jdata["uri"]
                         if self.th_e2lukija is not None:
                             self.th_e2lukija.join()
-                        self.th_e2lukija=threading.Thread(target=self.e2lukija)
+                        self.th_e2lukija = threading.Thread(
+                            target=self.e2lukija)
                         self.th_e2lukija.start()
                 else:
                     break
@@ -166,7 +167,8 @@ class Fork:
             atrcount = 0
             for i in self.CURTRACKS:
                 mappays += " -map i:"+str(i)
-                if self.CURTRACKS[i][0] != 2 and self.CURTRACKS[i][0] != 27:  # audiot..
+                # audiot..
+                if self.CURTRACKS[i][0] != 2 and self.CURTRACKS[i][0] != 27:
                     varstreammap += " a:"+str(atrcount)
                     lang = self.CURTRACKS[i][1]
                     if atrcount == 0:
@@ -187,7 +189,7 @@ class Fork:
             ffcmd = FFCOMMAND.replace("%MAP", mappays)
             ffcmd = ffcmd.replace("%CHANPATH", chanpath)
             ffcmd = ffcmd.split(" ")
-            
+
             for f in range(len(ffcmd)):
                 if ffcmd[f] == '"%VARSTREAMMAP"':
                     ffcmd[f] = varstreammap
@@ -199,7 +201,7 @@ class Fork:
                 time.sleep(0.3)
             self.prosff.kill()
             time.sleep(0.5)
-            self.prosff=None
+            self.prosff = None
 
     def ff_write_packet(self):  # kirjoita yksittäinen ts-paketti ffmpegille
         if self.prosff is not None:  # jos ffprosessi on käynnissä
@@ -226,118 +228,116 @@ class Fork:
                         self.PID = int.from_bytes(
                             self.spacket[1:3], byteorder='big') & 0b0001111111111111
                         self.Adaption = ((self.spacket[3]) & 0b00110000) >> 4
-                        if self.PUSI != 0 and self.PID in self.PATTABLE:
-                            self.parsePMT()
-                        if self.PID == 0:
-                            self.parsePAT()
+                        if PID==0 or (self.PUSI != 0 and self.PID in self.PATTABLE):
+                            self.parsePAT_PMT()
                         self.pacno += 1
                     self.ff_write_packet()
             else:
                 r.close()
                 break
 
-    def parsePAT(self):
-        start = 4
-        stream_id = self.spacket[start]
-        section_syntax_indicator = (self.spacket[start+1] & 0b10000000) >> 7
-        section_syntax_indicator = self.spacket[start+1] & 0b10000000 >> 7
-        section_length = int.from_bytes(
-            self.spacket[start+2:start+4], byteorder='big') & 0b0000111111111111
-        table_id_extension = int.from_bytes(
-            self.spacket[start+4:start+6], byteorder='big')
-        version_number = (self.spacket[start+6] & 0b00111110) >> 1
-        current_next_indicator = (self.spacket[start+6] & 0b00000001)
-        last_section_number = self.spacket[start+7]
-        program_info_length = int.from_bytes(
-            self.spacket[start+11:start+13], byteorder='big') & 0b0000111111111111
-        proginfo = self.spacket[start+14:start+14+program_info_length]
-        pointer = 17
-        while pointer < section_length+4:
-            program_num = int.from_bytes(
-                self.spacket[pointer:pointer+2], byteorder='big')
-            program_map_pid = int.from_bytes(
-                self.spacket[pointer+2:pointer+4], byteorder='big') & 0b0001111111111111
-            self.PATTABLE[program_map_pid] = program_num
-            self.LASTSEEN[program_map_pid] = time.time()
-            pointer += 4
 
-    def parsePMT(self):
-        if PID == 0:  # onkin PAT
-            return
-        start = 4
-        stream_id = self.spacket[start]
-        tableid = self.spacket[start]
-        section_syntax_indicator = (self.spacket[start+1] & 0b10000000) >> 7
-        private_indicator = (self.spacket[start+1] & 0b01000000) >> 6
-        program_info_length = int.from_bytes(
-            self.spacket[start+11:start+13], byteorder='big') & 0b0000111111111111
-        section_length = int.from_bytes(
-            self.spacket[start+2:start+4], byteorder='big') & 0b0000111111111111
-        table_id_extension = int.from_bytes(
-            self.spacket[start+4:start+6], byteorder='big')
-        version_number = (self.spacket[start+6] & 0b00111110) >> 1
-        current_next_indicator = (self.spacket[start+6] & 0b00000001)
-        section_number = self.spacket[start+7]
-        last_section_number = self.spacket[start+7]
-        proginfo = self.spacket[start+14:start+14+program_info_length]
+    def parsePAT_PMT(self):
+        if PID == 0: #PAT:
+            start = 4
+            stream_id = self.spacket[start]
+            section_syntax_indicator = (self.spacket[start+1] & 0b10000000) >> 7
+            section_syntax_indicator = self.spacket[start+1] & 0b10000000 >> 7
+            section_length = int.from_bytes(
+                self.spacket[start+2:start+4], byteorder='big') & 0b0000111111111111
+            table_id_extension = int.from_bytes(
+                self.spacket[start+4:start+6], byteorder='big')
+            version_number = (self.spacket[start+6] & 0b00111110) >> 1
+            current_next_indicator = (self.spacket[start+6] & 0b00000001)
+            last_section_number = self.spacket[start+7]
+            program_info_length = int.from_bytes(
+                self.spacket[start+11:start+13], byteorder='big') & 0b0000111111111111
+            proginfo = self.spacket[start+14:start+14+program_info_length]
+            pointer = 17
+            while pointer < section_length+4:
+                program_num = int.from_bytes(
+                    self.spacket[pointer:pointer+2], byteorder='big')
+                program_map_pid = int.from_bytes(
+                    self.spacket[pointer+2:pointer+4], byteorder='big') & 0b0001111111111111
+                self.PATTABLE[program_map_pid] = program_num
+                self.LASTSEEN[program_map_pid] = time.time()
+                pointer += 4
 
-        tracks_start_point = program_info_length+17
-        pointer = tracks_start_point
-        nytTracks = {}
+        else: #PMT
+            start = 4
+            stream_id = self.spacket[start]
+            tableid = self.spacket[start]
+            section_syntax_indicator = (self.spacket[start+1] & 0b10000000) >> 7
+            private_indicator = (self.spacket[start+1] & 0b01000000) >> 6
+            program_info_length = int.from_bytes(
+                self.spacket[start+11:start+13], byteorder='big') & 0b0000111111111111
+            section_length = int.from_bytes(
+                self.spacket[start+2:start+4], byteorder='big') & 0b0000111111111111
+            table_id_extension = int.from_bytes(
+                self.spacket[start+4:start+6], byteorder='big')
+            version_number = (self.spacket[start+6] & 0b00111110) >> 1
+            current_next_indicator = (self.spacket[start+6] & 0b00000001)
+            section_number = self.spacket[start+7]
+            last_section_number = self.spacket[start+7]
+            proginfo = self.spacket[start+14:start+14+program_info_length]
 
-        while pointer < section_length+program_info_length-17:
-            # ISO/IEC 13818-1 : 2000 (E): Table 2-29 – Stream type assignments 2VIDEO 3AUDIO
-            streamType = self.spacket[pointer]
-            elementary_PID = int.from_bytes(
-                self.spacket[pointer+1:pointer+3], byteorder='big') & 0b0001111111111111
-            ES_info_length = int.from_bytes(
-                self.spacket[pointer+3:pointer+5], byteorder='big') & 0b0000111111111111
-            olng = "und"
-            otype ="?"
-            oinfo ="?"
-            extdata = self.spacket[pointer+5:pointer+ES_info_length+5]
-            if STREAMTYPES[streamType][1]=="a": #ks https://github.com/videolan/dvblast/blob/master/demux.c
-                otype="audio"
-            if STREAMTYPES[streamType][1]=="v":
-                otype="video"
-            if STREAMTYPES[streamType][1]=="p":
-                if 0xE0 in extdata and 0x44 in extdata and 0x06 in extdata: #AC3
+            tracks_start_point = program_info_length+17
+            pointer = tracks_start_point
+            nytTracks = {}
+
+            while pointer < section_length+program_info_length-17:
+                # ISO/IEC 13818-1 : 2000 (E): Table 2-29 – Stream type assignments 2VIDEO 3AUDIO
+                streamType = self.spacket[pointer]
+                elementary_PID = int.from_bytes(
+                    self.spacket[pointer+1:pointer+3], byteorder='big') & 0b0001111111111111
+                ES_info_length = int.from_bytes(
+                    self.spacket[pointer+3:pointer+5], byteorder='big') & 0b0000111111111111
+                olng = "und"
+                otype = "?"
+                oinfo = "?"
+                extdata = self.spacket[pointer+5:pointer+ES_info_length+5]
+                # ks https://github.com/videolan/dvblast/blob/master/demux.c
+                if streamType in (0x03, 0x04, 0x0f, 0x11, 0x81, 0x87):
                     otype="audio"
+                elif streamType in (0x01, 0x02, 0x10, 0x1b, 0x24, 0x42):
+                    otype="video"
+                elif streamType == 0x06:
+                    for i in range(len(extdata)): #!TODO tarkasta tää alue ettei mennä kielikoodien päälle jo
+                        if extdata[i] in (0x6a, 0x7a, 0x7b, 0x7c):
+                            otype="audio"
+                        elif extdata[i] in (0x46, 0x56, 0x59):
+                            otype="subtitle"
 
-                elif extdata[0] ==0x52 and streamType==0x86:
-                    otype="hybridi"
-                elif 0x56 in extdata:
-                        otype="teletext"
-                else:
-                    otype="subtitle"
 
-            for i in range(len(extdata)):
-                if extdata[i]==0x0A and extdata[i+1] == 0x04 and extdata [i+5]<12: #aud lang
-                    olng=extdata[i+2:i+5].decode()
-    
-                if (extdata[i]==0x56 or extdata[i]==0x59) and extdata [i+5]<12: #subt lang
-                    olng=extdata[i+2:i+5].decode()
+                for i in range(len(extdata)):
+                    if extdata[i] == 0x0A and extdata[i+1] == 0x04 and extdata[i+5] < 12:  # aud lang
+                        olng = extdata[i+2:i+5].decode()
 
-            if STREAMTYPES[streamType][1]=="a" or STREAMTYPES[streamType][1]=="v":
-                nytTracks[elementary_PID] = [streamType,olng]
-                #!TODO tässä käy läpi ES_info_length:n määrä loopilla!! pitäisi mm kielikoodi löytyä!
-            pointer += ES_info_length+5 #!TODO fix
-        
-        if  nytTracks != self.CURTRACKS:  # raidat muuttuneet!
-            time.sleep(2)
-            if self.ffaja and len(self.CURTRACKS)>0:  # ffkirjoittaja on olemassa joten tapetaan se ensin
-                self.ffaja = False
-                self.PATTABLE = {}
-                self.CURTRACKS = {}
-                self.LASTSEEN = {}
-            self.CURTRACKS = copy.deepcopy(nytTracks)
+                    if (extdata[i] == 0x56 or extdata[i] == 0x59) and extdata[i+5] < 12:  # subt lang
+                        olng = extdata[i+2:i+5].decode()
+
+                if otype == "video" or otype == "audio":
+                    nytTracks[elementary_PID] = [streamType, olng]
+                    #!TODO tässä käy läpi ES_info_length:n määrä loopilla!! pitäisi mm kielikoodi löytyä!
+                pointer += ES_info_length+5 
+
+            if nytTracks != self.CURTRACKS:  # raidat muuttuneet!
+                time.sleep(2)
+                # ffkirjoittaja on olemassa joten tapetaan se ensin
+                if self.ffaja and len(self.CURTRACKS) > 0:
+                    self.ffaja = False
+                    self.PATTABLE = {}
+                    self.CURTRACKS = {}
+                    self.LASTSEEN = {}
+                self.CURTRACKS = copy.deepcopy(nytTracks)
+
 
 if __name__ == "__main__":
-    #print(len(sys.argv))
+    # print(len(sys.argv))
     channame = sys.argv[1]  # tulee argumenttina
     playtype = sys.argv[2]
     if len(sys.argv) > 3:
         uri = sys.argv[3]
     else:
-        uri=None
+        uri = None
     f = Fork(channame, playtype, uri)
